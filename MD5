@@ -1,0 +1,10 @@
+f8f3fb8c3964a6427066db2ff7571bcb *DESCRIPTION
+f523248f0686c32dd23df5cb4c8c15e5 *NAMESPACE
+5711cc6d7c6579d652f9e8c8c33e4e0d *R/cvplogistic.R
+5b23257509716d52023c07216f8faa01 *man/aic.cvplogistic.Rd
+265957abb9617d93ad2288b98ed9bff2 *man/auc.cvplogistic.Rd
+5b734a252aee0ed0eb80b429b9dfb8d5 *man/bic.cvplogistic.Rd
+82142ee0433fc3f11f270c1b844dd6fa *man/cvplogistic.Rd
+32436de9c5b750f6fa5a326446522982 *src/Makevars
+32436de9c5b750f6fa5a326446522982 *src/Makevars.win
+ced8a94cf82463d483e2c0754c9c1056 *src/cvplogistic.f

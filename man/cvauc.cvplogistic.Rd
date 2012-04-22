@@ -1,18 +1,19 @@
-\name{bic.cvplogistic}
+\name{cvauc.cvplogistic}
 \Rdversion{2.0}
-\alias{bic.cvplogistic}
-\title{Tuning parameter selection by BIC criteria for a concave
-  penalized logistic regression}
-\description{Tuning parameter (kappa, lambda)  selection using BIC
+\alias{cvauc.cvplogistic}
+\title{Tuning parameter selection by cross-validated area under ROC
+  curve (CVAUC) criteria for a concave penalized logistic regression}
+\description{Tuning parameter (kappa, lambda)  selection using CVAUC
   criteria for a concave penalized logistic regression. Only the models
   with df<n will be considered in the tuning parameter selection.}
 \usage{
-bic.cvplogistic(y, x, penalty = "mcp", approach = "mmcd",
+cvauc.cvplogistic(cv = 5, y, x, penalty = "mcp", approach = "mmcd",
 path = "kappa", nkappa = 10, maxkappa = 0.249,
-nlambda = 100, minlambda = 0.01,
-epsilon = 1e-3, maxit = 1e+3)
+nlambda = 100, minlambda = 0.01, epsilon = 1e-3, maxit = 1e+3,
+seed = 1000)
 }
 \arguments{
+  \item{cv}{the value of k for k fold cross-validation}
   \item{y}{response vector with elements 0 or 1. }
   \item{x}{the design matrix of variables. By default, an intercept
     vector will be added when fitting the model.}
@@ -37,6 +38,7 @@ epsilon = 1e-3, maxit = 1e+3)
   \item{epsilon}{a value specifying the converge criterion of algorithm.}
   \item{maxit}{an integer value specifying the maximum number of iterations for
     each coordinate.}
+  \item{seed}{random seed for generating cross-validation samples.}
 }
 \details{
   The package implement the majorization minimization by coordinate
@@ -46,7 +48,7 @@ epsilon = 1e-3, maxit = 1e+3)
   majorizes the loss function to avoid the computation of scaling
   factors. The algorithm is efficient and stable for high-dimensional
   data with p>>n.
-  
+
   The package provides three ways to compute solution surfaces for a
   concave penalized logistic model. The first one is compute along the
   regularization parameter kappa. That is  the Lasso solution (kappa=0)
@@ -57,7 +59,7 @@ epsilon = 1e-3, maxit = 1e+3)
   The solution surface computed along kappa tends to have a better
   performance in terms of model size and false discovery rate. Thus, the
   solution surface along kappa is recommended.
-  
+
   The third type of solution is called hybrid algorithm. The
   hybrid algorithm is specifically designed for the applications which
   aims to identify the leading causal predictors. In most cases,   the
@@ -70,17 +72,18 @@ epsilon = 1e-3, maxit = 1e+3)
   the variables, this practice greatly   reduces the computation
   burden. However, if Lasso misses one variable,   it will necessarily
   removed from the final model.
-  
+
   The tuning parameters including the regularization parameter kappa and
-  penalty parameter lambda are determined by the BIC criterion. The
-  solutions corresponding to the chosen tuning parameters is output as
-  the solution for the model. We only consider the models with df<n as the
-  candidate models to be chosen from. The BIC values are computed
+  penalty parameter lambda are determined by the cross-validated area
+  under ROC curve (CVAUC) criterion. The solutions corresponding to the
+  chosen tuning parameters is output as the solution for the model. We
+  only consider the models with df<n as the
+  candidate models to be chosen from. The CVAUC values are computed
   based on the solution surfaces computed as specified by the user.
 }
 \value{
   A list of four elements is returned.
-  \item{sbic}{the BIC value corresponding to the chosen tuning parameters.}
+  \item{scvauc}{the CVAUC criterion corresponding to the chosen tuning parameters.}
   \item{slambda}{the chosen penalty parameter.}
   \item{skappa}{the chosen regularization parameter.}
   \item{scoef}{the coefficients of variables in x
@@ -102,13 +105,14 @@ epsilon = 1e-3, maxit = 1e+3)
   Med Res}, online first, Nov 28, 2011.
 }
 \seealso{\code{cvplogistic}, \code{aic.cvplogistic},
-  \code{cvauc.cvplogistic}}
+  \code{bic.cvplogistic}}
 \examples{
 set.seed(10000)
 n=100
 y=rbinom(n,1,0.4)
 p=50
 x=matrix(rnorm(n*p),n,p)
+cv=5
 nkappa=5
 maxkappa=0.249
 nlambda=20
@@ -116,32 +120,34 @@ nlambda=20
 penalty="mcp"
 approach="mmcd"
 path="kappa"
-out=bic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa,
-nlambda)
+out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa,
+  maxkappa, nlambda)
 path="lambda"
-out=bic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 path="hybrid"
-out=bic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 approach="adaptive"
 path="kappa"
-out=bic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 path="lambda"
-out=bic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 path="hybrid"
-out=bic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
-## using LLA approach, path option has no effect.
+out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+## LLA only the solution along kappa is implemented
 approach="llacda"
 maxkappa=0.99
-out=bic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+path="kappa"
+out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+## cvauc is not implemented for LLA approach.
 ## SCAD penalty
 maxkappa=0.19
 penalty="scad"
 path="kappa"
-out=bic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 path="lambda"
-out=bic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 path="hybrid"
-out=bic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 }
 \keyword{models}
 \keyword{regression}

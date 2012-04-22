@@ -1,5 +1,5 @@
 \name{aic.cvplogistic}
-\Rdversion{1.1}
+\Rdversion{2.0}
 \alias{aic.cvplogistic}
 \title{Tuning parameter selection by AIC criteria for a concave
   penalized logistic regression}
@@ -7,30 +7,35 @@
   criteria for a concave penalized logistic regression. Only the models
   with df<n will be considered in the tuning parameter selection.}
 \usage{
-aic.cvplogistic(y,x,penalty="mcp",path="kappa",nkappa=20,maxkappa=0.249,
-nlambda=100,minlambda=ifelse(n>p,0.0001,0.01),epsilon=1e-3,maxit=1e+4)
+aic.cvplogistic(y, x, penalty = "mcp", approach = "mmcd",
+path = "kappa", nkappa = 10, maxkappa = 0.249,
+nlambda = 100, minlambda = 0.01,
+epsilon = 1e-3, maxit = 1e+3)
 }
 \arguments{
   \item{y}{response vector with elements 0 or 1. }
   \item{x}{the design matrix of variables. By default, an intercept
-    vector will be added into the model fitting.}
-  \item{penalty}{a character indicating the penalty. One of "mcp" or "scad"
-    should be specified, with "mcp" being the default. }
+    vector will be added when fitting the model.}
+  \item{penalty}{a character specifying the penalty. One of "mcp" or
+    "scad" should be specified, with "mcp" being the default. }
+  \item{approach}{a character specifying the numerical algorithm. One of
+    "mmcd", "adaptive" or "lla" can be specified, with "mmcd" being the
+    default. See following details for more information. }
   \item{path}{a character indicating how the solution surface should be
-    computed. Three values are allowed, "kappa","lambda", and
-    "hybrid". See following details for more information.}
-  \item{nkappa}{a integer value specifies the number of grids along the
+    computed. Three values are allowed, "kappa","lambda" or "hybrid". See
+    following details for more information.}
+  \item{nkappa}{a integer value specifying the number of grids along the
     regulation parameter kappa. }
-    \item{maxkappa}{a value specifies the maximum of the regulation
+  \item{maxkappa}{a value specifying the maximum of the regulation
     parameter kappa. The proper range for kappa is [0,0.25) for MCP and
-    [0,0.2) for SCAD.}
-  \item{nlambda}{a integer value specifies the number of grids along the
+    [0,0.2) for SCAD if using the MMCD algorithm.}
+  \item{nlambda}{a integer value specifying the number of grids along the
     penalty parameter lambda.}
-  \item{minlambda}{a value specifies how to compute the minimal value of
-    penalty parameter, which is defined as lambda_min=lambda_max*minlambda.
+  \item{minlambda}{a value specifying how to determine the minimal value of
+    penalty parameter lambda. We define lambda_min=lambda_max*minlambda.
     By default, minlambda is 0.0001 if n>p; 0.01 otherwise.}
-  \item{epsilon}{a value specifies the converge criterion of algorithm.}
-  \item{maxit}{a integer value specifies the maximum of iterations for
+  \item{epsilon}{a value specifying the converge criterion of algorithm.}
+  \item{maxit}{an integer value specifying the maximum number of iterations for
     each coordinate.}
 }
 \details{
@@ -67,51 +72,76 @@ nlambda=100,minlambda=ifelse(n>p,0.0001,0.01),epsilon=1e-3,maxit=1e+4)
   removed from the final model.
 
   The tuning parameters including the regularization parameter kappa and
-  penalty parameter are determined by the AIC criterion. The
+  penalty parameter lambda are determined by the AIC criterion. The
   solutions corresponding to the chosen tuning parameters is output as
   the solution for the model. We only consider the models with df<n as the
   candidate models to be chosen from. The AIC values are computed
   based on the solution surfaces computed as specified by the user.
 }
 \value{
-  A list of five elements is returned.
-  \item{tuning.AIC}{The AIC value corresponding to chosen tuning
-    parameter.}
-  \item{tuning.lambda}{The chosen penalty parameter.}
-  \item{tuning.kappa}{The chosen regularization parameter.}
-  \item{tuning.intercept}{The intercept coefficient corresponding to the
-    chosen tuning parameter.}
-  \item{tuning.covariates}{The coefficients of variables in x
+  A list of four elements is returned.
+  \item{saic}{the AIC value corresponding to the chosen tuning parameters.}
+  \item{slambda}{the chosen penalty parameter.}
+  \item{skappa}{the chosen regularization parameter.}
+  \item{scoef}{the coefficients of variables in x
     corresponding to the chosen tuning parameter.}
 }
 \author{Dingfeng Jiang}
 \references{Dingfeng Jiang, Jian Huang. Majorization Minimization by
-  Coordinate Descent for Concave Penalized Generalized Linear Models. }
-\seealso{\code{cvplogistic}, \code{bic.cvplogistic}, \code{auc.cvplogistic}}
+  Coordinate Descent for Concave Penalized Generalized Linear Models.
+
+  Zou, H., Li, R. (2008). One-step Sparse Estimates in Nonconcave Penalized
+  Likelihood Models. \emph{Ann Stat}, 364: 1509-1533.
+
+  Breheny, P., Huang, J. (2011). Coordinate Descent Algorithms for Nonconvex
+  Penalized Regression, with Application to Biological Feature
+  Selection. \emph{Ann Appl Stat}, 5(1), 232-253.
+
+  Jiang, D., Huang, J., Zhang, Y. (2011). The Cross-validated AUC for
+  MCP-Logistic Regression with High-dimensional Data. \emph{Stat Methods
+  Med Res}, online first, Nov 28, 2011.
+}
+\seealso{\code{cvplogistic}, \code{bic.cvplogistic},
+  \code{cvauc.cvplogistic}}
 \examples{
-seed=10000
+set.seed(10000)
 n=100
 y=rbinom(n,1,0.4)
 p=50
 x=matrix(rnorm(n*p),n,p)
-penalty="mcp"
 nkappa=5
 maxkappa=0.249
 nlambda=20
+## MCP penalty
+penalty="mcp"
+approach="mmcd"
 path="kappa"
-out=aic.cvplogistic(y,x,penalty,path,nkappa,maxkappa,nlambda)
+out=aic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa,
+nlambda)
 path="lambda"
-out=aic.cvplogistic(y,x,penalty,path,nkappa,maxkappa,nlambda)
+out=aic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 path="hybrid"
-out=aic.cvplogistic(y,x,penalty,path,nkappa,maxkappa,nlambda)
-penalty="scad"
+out=aic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+approach="adaptive"
+path="kappa"
+out=aic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+path="lambda"
+out=aic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+path="hybrid"
+out=aic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+## using LLA approach, path option has no effect.
+approach="llacda"
+maxkappa=0.99
+out=aic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+## SCAD penalty
 maxkappa=0.19
+penalty="scad"
 path="kappa"
-out=aic.cvplogistic(y,x,penalty,path,nkappa,maxkappa,nlambda)
+out=aic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 path="lambda"
-out=aic.cvplogistic(y,x,penalty,path,nkappa,maxkappa,nlambda)
+out=aic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 path="hybrid"
-out=aic.cvplogistic(y,x,penalty,path,nkappa,maxkappa,nlambda)
+out=aic.cvplogistic(y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
 }
 \keyword{models}
 \keyword{regression}

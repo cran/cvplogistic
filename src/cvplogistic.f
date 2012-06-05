@@ -4327,3 +4327,6 @@ c     compute model size,eigenvalue,aic,bic, objective function
          ocoef(q+i,:)=as(i)*ocoef(q+i,:)
 10005 continue
       end
+
+
+

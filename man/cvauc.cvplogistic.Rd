@@ -7,13 +7,15 @@
   criteria for a concave penalized logistic regression. Only the models
   with df<n will be considered in the tuning parameter selection.}
 \usage{
-cvauc.cvplogistic(cv = 5, y, x, penalty = "mcp", approach = "mmcd",
-path = "kappa", nkappa = 10, maxkappa = 0.249,
+cvauc.cvplogistic(cv = 5, stratified = TRUE, y, x, penalty = "mcp",
+approach = "mmcd", path = "kappa", nkappa = 10, maxkappa = 0.249,
 nlambda = 100, minlambda = 0.01, epsilon = 1e-3, maxit = 1e+3,
 seed = 1000)
 }
 \arguments{
   \item{cv}{the value of k for k fold cross-validation}
+  \item{stratified}{whether stratified cross-validation should be used,
+    with default to be TRUE.}
   \item{y}{response vector with elements 0 or 1. }
   \item{x}{the design matrix of variables. By default, an intercept
     vector will be added when fitting the model.}
@@ -116,38 +118,49 @@ cv=5
 nkappa=5
 maxkappa=0.249
 nlambda=20
+stratified=TRUE
 ## MCP penalty
 penalty="mcp"
 approach="mmcd"
 path="kappa"
-out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa,
-  maxkappa, nlambda)
+#out=cvauc.cvplogistic(cv, stratified, y, x, penalty, approach, path, nkappa,
+#  maxkappa, nlambda)
 path="lambda"
-out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+#out=cvauc.cvplogistic(cv, stratified, y, x, penalty, approach, path,
+#  nkappa, maxkappa, nlambda)
 path="hybrid"
-out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+#out=cvauc.cvplogistic(cv, stratified, y, x, penalty, approach, path,
+#  nkappa, maxkappa, nlambda)
+stratified=FALSE  
 approach="adaptive"
 path="kappa"
-out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+#out=cvauc.cvplogistic(cv, stratified, y, x, penalty, approach, path,
+#  nkappa, maxkappa, nlambda)
 path="lambda"
-out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+#out=cvauc.cvplogistic(cv, stratified, y, x, penalty, approach, path,
+#  nkappa, maxkappa, nlambda)
 path="hybrid"
-out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+#out=cvauc.cvplogistic(cv, stratified, y, x, penalty, approach, path,
+#  nkappa, maxkappa, nlambda)
 ## LLA only the solution along kappa is implemented
 approach="llacda"
 maxkappa=0.99
 path="kappa"
-out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+#out=cvauc.cvplogistic(cv, stratified, y, x, penalty, approach, path,
+#  nkappa, maxkappa, nlambda)
 ## cvauc is not implemented for LLA approach.
 ## SCAD penalty
 maxkappa=0.19
 penalty="scad"
 path="kappa"
-out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+#out=cvauc.cvplogistic(cv, stratified, y, x, penalty, approach, path,
+#  nkappa, maxkappa, nlambda)
 path="lambda"
-out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+#out=cvauc.cvplogistic(cv, stratified, y, x, penalty, approach, path,
+#  nkappa, maxkappa, nlambda)
 path="hybrid"
-out=cvauc.cvplogistic(cv, y, x, penalty, approach, path, nkappa, maxkappa, nlambda)
+#out=cvauc.cvplogistic(cv, stratified, y, x, penalty, approach, path,
+#  nkappa, maxkappa, nlambda)
 }
 \keyword{models}
 \keyword{regression}

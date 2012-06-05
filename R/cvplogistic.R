@@ -277,9 +277,9 @@ bic.cvplogistic <- function(y, x, penalty = "mcp", approach = "mmcd", path = "ka
 
 
 ## Tuning parameter selection using CV-AUC
-cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", path = "kappa",
-                              nkappa = 10, maxkappa = 0.249, nlambda = 100,
-                              minlambda = 0.01,
+cvauc.cvplogistic <- function(cv = 5, stratified = TRUE, y, x, penalty = "mcp", approach = "mmcd",
+                              path = "kappa", nkappa = 10, maxkappa = 0.249,
+                              nlambda = 100, minlambda = 0.01,
                               epsilon = 1e-3, maxit = 1e+3, seed = 1000){
     ## error checking
     if (nrow(x) != length(y)) stop("# of rows in X does not match the length of Y! \n")
@@ -314,9 +314,28 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
     int <- rep(1, n)
     qp <- qq+p
     cvk <- cv
-    cvpool <- rep(rep(1:cvk), length = n)
     set.seed(seed)
-    nindex <- sample(cvpool, replace = FALSE)
+    ## cross validation index
+    if (stratified == FALSE) {
+        ## cross validation without stratification
+        cvpool <- rep(rep(1:cvk), length = n)
+        nindex <- sample(cvpool, replace = FALSE)
+        oy <- y
+        ox <- x
+    } else{
+        ## strafified cross validation
+        n0 <- length(y[y==0])
+        n1 <- n-n0
+        cvpool0 <- rep(rep(1:cvk), length = n0)
+        cvpool1 <- rep(rep(1:cvk), length = n1)
+        nidx0 <- sample(cvpool0, replace = FALSE)
+        nidx1 <- sample(cvpool1, replace = FALSE)
+        nindex <- c(nidx0, nidx1)
+        ## reorder the data
+        odridx <- order(y)
+        oy <- y[odridx]
+        ox <- x[odridx,]
+    }
     ## create output space
     oout <- rep(0, 3+qp)
     opauc <- rep(0, nkappa*nlambda)
@@ -341,7 +360,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
                                     as.integer(odf), as.integer(ocvx), as.integer(ofull),
                                     as.integer(cvcvx), as.integer(cvfull),
                                     as.integer(nindex), as.integer(cvk),
-                                    as.double(y), as.double(int), as.double(x),
+                                    as.double(oy), as.double(int), as.double(ox),
                                     as.integer(n), as.integer(qq), as.integer(p),
                                     as.integer(nkappa), as.double(maxkappa),
                                     as.integer(nlambda), as.double(minlambda),
@@ -353,7 +372,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
                                     as.integer(odf), as.integer(ocvx), as.integer(ofull),
                                     as.integer(cvcvx), as.integer(cvfull),
                                     as.integer(nindex), as.integer(cvk),
-                                    as.double(y), as.double(int), as.double(x),
+                                    as.double(oy), as.double(int), as.double(ox),
                                     as.integer(n), as.integer(qq), as.integer(p),
                                     as.integer(nkappa), as.double(maxkappa),
                                     as.integer(nlambda), as.double(minlambda),
@@ -365,7 +384,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
                                     as.integer(odf), as.integer(ocvx), as.integer(ofull),
                                     as.integer(cvcvx), as.integer(cvfull),
                                     as.integer(nindex), as.integer(cvk),
-                                    as.double(y), as.double(int), as.double(x),
+                                    as.double(oy), as.double(int), as.double(ox),
                                     as.integer(n), as.integer(qq), as.integer(p),
                                     as.integer(nkappa), as.double(maxkappa),
                                     as.integer(nlambda), as.double(minlambda),
@@ -379,7 +398,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
                                     as.integer(odf), as.integer(ocvx), as.integer(ofull),
                                     as.integer(cvcvx), as.integer(cvfull),
                                     as.integer(nindex), as.integer(cvk),
-                                    as.double(y), as.double(int), as.double(x),
+                                    as.double(oy), as.double(int), as.double(ox),
                                     as.integer(n), as.integer(qq), as.integer(p),
                                     as.integer(nkappa), as.double(maxkappa),
                                     as.integer(nlambda), as.double(minlambda),
@@ -391,7 +410,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
                                     as.integer(odf), as.integer(ocvx), as.integer(ofull),
                                     as.integer(cvcvx), as.integer(cvfull),
                                     as.integer(nindex), as.integer(cvk),
-                                    as.double(y), as.double(int), as.double(x),
+                                    as.double(oy), as.double(int), as.double(ox),
                                     as.integer(n), as.integer(qq), as.integer(p),
                                     as.integer(nkappa), as.double(maxkappa),
                                     as.integer(nlambda), as.double(minlambda),
@@ -403,7 +422,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
                                     as.integer(odf), as.integer(ocvx), as.integer(ofull),
                                     as.integer(cvcvx), as.integer(cvfull),
                                     as.integer(nindex), as.integer(cvk),
-                                    as.double(y), as.double(int), as.double(x),
+                                    as.double(oy), as.double(int), as.double(ox),
                                     as.integer(n), as.integer(qq), as.integer(p),
                                     as.integer(nkappa), as.double(maxkappa),
                                     as.integer(nlambda), as.double(minlambda),
@@ -416,7 +435,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
                                 as.integer(odf), as.integer(ocvx), as.integer(ofull),
                                 as.integer(cvcvx), as.integer(cvfull),
                                 as.integer(nindex), as.integer(cvk),
-                                as.double(y), as.double(int), as.double(x),
+                                as.double(oy), as.double(int), as.double(ox),
                                 as.integer(n), as.integer(qq), as.integer(p),
                                 as.integer(nkappa), as.double(maxkappa),
                                 as.integer(nlambda), as.double(minlambda),
@@ -430,7 +449,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
                                 as.integer(odf), as.integer(ocvx), as.integer(ofull),
                                 as.integer(cvcvx), as.integer(cvfull),
                                 as.integer(nindex), as.integer(cvk),
-                                as.double(y), as.double(int), as.double(x),
+                                as.double(oy), as.double(int), as.double(ox),
                                 as.integer(n), as.integer(qq), as.integer(p),
                                 as.integer(nkappa), as.double(maxkappa),
                                 as.integer(nlambda), as.double(minlambda),
@@ -442,7 +461,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
                                 as.integer(odf), as.integer(ocvx), as.integer(ofull),
                                 as.integer(cvcvx), as.integer(cvfull),
                                 as.integer(nindex), as.integer(cvk),
-                                as.double(y), as.double(int), as.double(x),
+                                as.double(oy), as.double(int), as.double(ox),
                                 as.integer(n), as.integer(qq), as.integer(p),
                                 as.integer(nkappa), as.double(maxkappa),
                                 as.integer(nlambda), as.double(minlambda),
@@ -454,7 +473,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
                                 as.integer(odf), as.integer(ocvx), as.integer(ofull),
                                 as.integer(cvcvx), as.integer(cvfull),
                                 as.integer(nindex), as.integer(cvk),
-                                as.double(y), as.double(int), as.double(x),
+                                as.double(oy), as.double(int), as.double(ox),
                                 as.integer(n), as.integer(qq), as.integer(p),
                                 as.integer(nkappa), as.double(maxkappa),
                                 as.integer(nlambda), as.double(minlambda),
@@ -482,7 +501,7 @@ cvauc.cvplogistic <- function(cv = 5, y, x, penalty = "mcp", approach = "mmcd", 
         ukappa <- kappa[uidx]
         ucoef <- coef[, uidx]
         ## minmum cvauc
-        aucidx <- ucvauc ==  min(ucvauc)
+        aucidx <- ucvauc ==  max(ucvauc)
         scvauc <- ucvauc[aucidx][[1]]
         slambda <- ulambda[aucidx][[1]]
         skappa <- ukappa[aucidx][[1]]

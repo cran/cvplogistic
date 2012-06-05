@@ -1,10 +1,10 @@
 Package: cvplogistic
-Version: 2.0-0
-Date: 2012-04-22
+Version: 2.1-0
+Date: 2012-06-05
 Title: Majorization Minimization by Coordinate Descent Algorithm for
         Concave Penalized Logistic Regression for High Dimensional Data
-Author: Dingfeng Jiang <dingfeng-jiang@uiowa.edu>
-Maintainer: Dingfeng Jiang <dingfeng-jiang@uiowa.edu>
+Author: Dingfeng Jiang <dingfeng.jiang@abbott.com>
+Maintainer: Dingfeng Jiang <dingfeng.jiang@abbott.com>
 Depends: R (>= 2.9.0), Matrix
 Description: The package uses majorization minimization by coordinate
         descent (MMCD) algorithm to compute the solution surface for
@@ -21,6 +21,6 @@ Description: The package uses majorization minimization by coordinate
         also provided for the MCP penalty as optional choices.
 License: GPL (>= 2)
 URL: http://www.r-project.org
-Packaged: 2012-05-07 00:21:12 UTC; dingfeng
+Packaged: 2012-06-05 04:30:24 UTC; luwenjing
 Repository: CRAN
-Date/Publication: 2012-05-07 05:10:55
+Date/Publication: 2012-06-05 05:55:42

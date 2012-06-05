@@ -1,0 +1,6 @@
+Change of version 2.1-0
+	Add stratified cross-validation option to the cvauc.cvplogistic function for unbalanced data.
+
+
+Change of Version 2.0-0:
+	Add local linear approximation by coordinate descent algorithm into the package. 

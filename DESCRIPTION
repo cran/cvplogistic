@@ -1,26 +1,28 @@
 Package: cvplogistic
-Version: 2.1-0
-Date: 2012-06-05
-Title: Majorization Minimization by Coordinate Descent Algorithm for
-        Concave Penalized Logistic Regression for High Dimensional Data
-Author: Dingfeng Jiang <dingfeng.jiang@abbott.com>
-Maintainer: Dingfeng Jiang <dingfeng.jiang@abbott.com>
-Depends: R (>= 2.9.0), Matrix
+Version: 3.1-0
+Date: 2013-03-17
+Title: Penalized Logistic Regression Model using Majorization
+        Minimization by Coordinate Descent (MMCD) Algorithm
+Author: Dingfeng Jiang <dingfengjiang@gmail.com>
+Maintainer: Dingfeng Jiang <dingfengjiang@gmail.com>
+Depends: R (>= 2.9.0)
 Description: The package uses majorization minimization by coordinate
         descent (MMCD) algorithm to compute the solution surface for
-        concave penalized logistic regression models. The SCAD and MCP
+        concave penalized logistic regression model.  The SCAD and MCP
         (default) are two concave penalties considered in this
-        implementation. The package provides three types of solutions
-        surfaces, one computed along the regulation parameter kappa
-        (default), the one along the penalty parameter lambda, and the
-        one computed using a hybrid algorithm. The package also
-        provides three tuning parameter selection methods, one based on
-        AIC, one based on BIC and one based on k-fold cross-validated
-        area under ROC curve. Other algorithms such as the adaptive
-        rescaling approach and local linear approximation approach are
-        also provided for the MCP penalty as optional choices.
+        implementation.  For the MCP penalty, the package also provides
+        the local linear approximation by coordinate descant (LLA-CD)
+        and adaptive rescaling algorithms for computing the solutions.
+        The package also provides a Lasso-concave hybrid penalty for
+        fast variable selection. The hybrid penalty applies the concave
+        penalty only to the variables selected by the Lasso.  For all
+        the implemented methods, the solution surface is computed along
+        kappa, which is a more smooth fit for the logistic model.
+        Tuning parameter selection method by k-fold cross-validated
+        area under ROC curve (CV-AUC) is implemented as well.
 License: GPL (>= 2)
 URL: http://www.r-project.org
-Packaged: 2012-06-05 04:30:24 UTC; luwenjing
+Packaged: 2013-03-18 02:04:48 UTC; luwenjing
+NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2012-06-05 05:55:42
+Date/Publication: 2013-03-18 10:29:02

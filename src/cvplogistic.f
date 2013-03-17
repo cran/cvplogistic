@@ -422,6 +422,63 @@ c     ... end of iteration
       end
 
 
+
+c     Lasso solution with user-specified lambda
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      subroutine bflasso(alpha,beta,eta,lmda,y,x,z,n,q,p,
+     +     epsilon,maxit, maxlmda)
+      integer n,q,p,maxit
+      double precision alpha(q),beta(p),eta(n),lmda,y(n),x(n,q),
+     +     z(n,p),epsilon, maxlmda
+      integer count,j,i,tag
+      double precision alphaold(q),betaold(p),pi(n),r(n),m,numor
+      if (lmda .ge. maxlmda) then 
+         go to 1218
+      else
+c     ... start of iteration
+         count=0
+ 1210    continue
+         alphaold(:)=alpha(:)
+         betaold(:)=beta(:)
+!     ... update beta part
+         do 1211 j=1,p
+            do 1212 i=1,n
+               pi(i)=1.d0/(1.d0+exp(-eta(i)))
+               if (pi(i) .lt. 0.0001) pi(i)=0.d0
+               if (pi(i) .gt. 0.9999) pi(i)=1.d0
+               r(i)=y(i)-pi(i)
+ 1212       continue
+!     ...... m=beta_{j}/4+Z'_{j}r/n
+            m=beta(j)/4.d0 + dot_product(z(:,j),r)/dble(n)
+            call soft(numor,m,lmda)
+            beta(j)=4.d0*numor
+!     ...... eta^{s+1}=eta^{s}+z_{j}*(b^{s+1}-b^{s})
+            eta(:)=eta(:) + z(:,j)*( beta(j) - betaold(j) )
+ 1211    continue
+!     ... update alpha part
+         do 1215 i=1,n
+            pi(i)=1.d0/(1.d0+exp(-eta(i)))
+            if (pi(i) .lt. 0.0001) pi(i)=0.d0
+            if (pi(i) .gt. 0.9999) pi(i)=1.d0
+            r(i)=y(i)-pi(i)
+ 1215    continue
+         call dgemv("T",n,q,4.d0/dble(n),x,n,r,1,1.d0,alpha,1)
+!     ...... eta^{s+1}=eta^{s}+z_{j}*(b^{s+1}-b^{s})
+         do 1217 j=1,q
+            eta(:)=eta(:) + x(:,j)*( alpha(j) - alphaold(j) )
+ 1217    continue
+         count=count+1
+         call converge2(tag,alpha,alphaold,q,beta,betaold,p,epsilon)
+         if (tag .eq. 1) go to 1216
+         if (count .ge. maxit) call rexit("Lasso path diverges! \n")
+         if (count .lt. maxit) go to 1210
+c     ... end of iteration
+ 1216    continue
+      end if
+ 1218 continue
+      end
+      
+
 !***********************************************************************
 !     SCAD part: MMCD
 !***********************************************************************
@@ -486,6 +543,72 @@ c     ... begin of iteration
 c     ... end of iteration
       end
 
+      
+c     SCAD solution with user-specified lambdas
+c***********************************************************************
+      subroutine bfscad(alpha,beta,eta,lmda,ka,y,x,z,n,q,p,
+     +     epsilon,maxit, maxlmda)
+      integer n,q,p,maxit
+      double precision alpha(q),beta(p),eta(n),lmda,ka,y(n),x(n,q),
+     +     z(n,p),epsilon, maxlmda
+      integer count,j,i,tag
+      double precision alphaold(q),betaold(p),pi(n),r(n),m,numor,gamma,
+     +     newlmda
+      if (lmda .ge. maxlmda) then 
+         go to 1007
+      else
+c     ... begin of iteration
+         gamma=1.d0/ka
+         count=0
+ 1000    continue
+         alphaold(:)=alpha(:)
+         betaold(:)=beta(:)
+!     ... update beta part
+         do 1001 j=1,p
+            do 1003 i=1,n
+               pi(i)=1.d0/(1.d0+exp(-eta(i)))
+               if (pi(i) .lt. 0.0001) pi(i)=0.d0
+               if (pi(i) .gt. 0.9999) pi(i)=1.d0
+               r(i)=y(i)-pi(i)
+ 1003       continue
+!     ...... m=beta_{j}/4+Z'_{j}r/n
+            m=beta(j)/4.d0 + dot_product(z(:,j),r)/dble(n)
+            if (abs(m) .lt. 1.25*lmda) then
+               call soft(numor,m,lmda)
+               beta(j)=4.d0*numor
+            else if ( abs(m) .ge. 0.25*lmda*gamma ) then
+               beta(j)=4.d0*m
+            else 
+               newlmda=lmda*gamma/(gamma-1.d0)
+               call soft(numor,m,newlmda)
+               beta(j)=4.d0*(gamma-1.d0)*numor/(gamma-5.d0)
+            end if
+!     ...... eta^{s+1}=eta^{s}+z_{j}*(b^{s+1}-b^{s})
+            eta(:)=eta(:) + z(:,j)*( beta(j) - betaold(j) )
+ 1001    continue
+!     ... update alpha part
+         do 1215 i=1,n
+            pi(i)=1.d0/(1.d0+exp(-eta(i)))
+            if (pi(i) .lt. 0.0001) pi(i)=0.d0
+            if (pi(i) .gt. 0.9999) pi(i)=1.d0
+            r(i)=y(i)-pi(i)
+ 1215    continue
+         call dgemv("T",n,q,4.d0/dble(n),x,n,r,1,1.d0,alpha,1)
+!     ...... eta^{s+1}=eta^{s}+z_{jl}*(b^{s+1}-b^{s})
+         do 1217 j=1,q
+            eta(:)=eta(:) + x(:,j)*( alpha(j) - alphaold(j) )
+ 1217    continue
+         count=count+1
+         call converge2(tag,alpha,alphaold,q,beta,betaold,p,epsilon)
+         if (tag .eq. 1) go to 1006
+         if (count .ge. maxit) call rexit("Diverge kappa & lambda!\n")
+         if (count .lt. maxit) go to 1000
+ 1006    continue
+c     ... end of iteration
+      end if
+ 1007 continue
+      end
+      
 
 
 c     SCAD solution, update non-zero only
@@ -608,6 +731,66 @@ c     ... begin of iteration
       if (count .lt. maxit) go to 1000
  1006 continue
 c     ... end of iteration
+      end
+
+      
+c     MCP solution for user specified lambdas
+c***********************************************************************
+      subroutine bfmcp(alpha,beta,eta,lmda,ka,y,x,z,n,q,p,
+     +     epsilon,maxit, maxlmda)
+      integer n,q,p,maxit
+      double precision alpha(q),beta(p),eta(n),lmda,ka,y(n),x(n,q),
+     +     z(n,p),epsilon, maxlmda
+      integer count,j,i,tag
+      double precision alphaold(q),betaold(p),pi(n),r(n),m,numor
+      if (lmda .ge. maxlmda) then 
+         go to 1007
+      else
+c     ... begin of iteration
+         count=0
+ 1000    continue
+         alphaold(:)=alpha(:)
+         betaold(:)=beta(:)
+!     ... update beta part
+         do 1001 j=1,p
+            do 1003 i=1,n
+               pi(i)=1.d0/(1.d0+exp(-eta(i)))
+               if (pi(i) .lt. 0.0001) pi(i)=0.d0
+               if (pi(i) .gt. 0.9999) pi(i)=1.d0
+               r(i)=y(i)-pi(i)
+ 1003       continue
+!     ...... m=beta_{j}/4+Z'_{j}r/n
+            m=beta(j)/4.d0 + dot_product(z(:,j),r)/dble(n)
+            if (abs(m) .lt. 0.25*lmda/ka) then
+               call soft(numor,m,lmda)
+               beta(j)=numor/(0.25-ka)
+            else
+               beta(j)=4.d0*m
+            end if
+!     ...... eta^{s+1}=eta^{s}+z_{j}*(b^{s+1}-b^{s})
+            eta(:)=eta(:) + z(:,j)*( beta(j) - betaold(j) )
+ 1001    continue
+!     ... update alpha part
+         do 1215 i=1,n
+            pi(i)=1.d0/(1.d0+exp(-eta(i)))
+            if (pi(i) .lt. 0.0001) pi(i)=0.d0
+            if (pi(i) .gt. 0.9999) pi(i)=1.d0
+            r(i)=y(i)-pi(i)
+ 1215    continue
+         call dgemv("T",n,q,4.d0/dble(n),x,n,r,1,1.d0,alpha,1)
+!     ...... eta^{s+1}=eta^{s}+z_{jl}*(b^{s+1}-b^{s})
+         do 1217 j=1,q
+            eta(:)=eta(:) + x(:,j)*( alpha(j) - alphaold(j) )
+ 1217    continue
+         count=count+1
+         call converge2(tag,alpha,alphaold,q,beta,betaold,p,epsilon)
+         if (tag .eq. 1) go to 1006
+         if (count .ge. maxit) call rexit("Diverge kappa & lambda! \n")
+         if (count .lt. maxit) go to 1000
+ 1006    continue
+c     ... end of iteration
+      end if
+ 1007 continue
       end
 
 
@@ -765,6 +948,101 @@ c     compute model size,eigenvalue,aic,bic, objective function
 10005 continue
       end
 
+
+c     solution path along kappa with lambdas specified
+c***********************************************************************
+      subroutine bfscadkapa(olmdas,okas,ocoef,oaic,obic,oobj,odf,oevidx,
+     +     y,x,z,n,q,p,nka,maxka,nlmda,minlmda,umaxlmda,
+     +     epsilon,maxit)
+      integer n,q,p,nka,nlmda,maxit,odf(nka*nlmda),oevidx(nka*nlmda)
+      double precision olmdas(nka*nlmda),okas(nka*nlmda),
+     +     ocoef(q+p,nka*nlmda),oaic(nka*nlmda),obic(nka*nlmda),
+     +     oobj(nka*nlmda),y(n),x(n,q),z(n,p),
+     +     maxka,minlmda,epsilon, umaxlmda
+      integer i,j
+      double precision as(p),sz(n,p),kas(nka),unitka,unitlmda,maxlmda,
+     +     lmdas(nlmda),alpha(q),beta(p),eta(n),
+     +     inia(q,nlmda),inib(p,nlmda),etamat(n,nlmda)
+c     standardization of Z
+      call standard(as,sz,z,n,p)
+c     calculate kappas
+      if (nka .eq. 1) then
+         kas(1)=0.d0
+      else
+         unitka=maxka/dble(nka-1)
+         do 10000 i=1,nka
+            kas(i)=dble(i-1)*unitka
+10000    continue
+      endif
+c     calculate lambdas
+      unitlmda=log(minlmda)/dble(nlmda-1)
+      call maxbi(maxlmda,alpha,beta,eta,y,x,sz,n,q,p,
+     +     epsilon,maxit)
+      if (umaxlmda .gt. 0.d0) then
+         lmdas(1)=umaxlmda
+      else
+         lmdas(1)=maxlmda
+      end if
+      do 10001 i=2,nlmda
+         lmdas(i)=lmdas(1)*exp(unitlmda*dble(i-1))
+10001 continue
+c     Lassxo solution path as initials
+      inia(:,1)=alpha(:)
+      inib(:,1)=beta(:)
+      etamat(:,1)=eta(:)
+      do 10002 i=2,nlmda
+         call bflasso(alpha,beta,eta,lmdas(i),y,x,sz,n,q,p,
+     +        epsilon,maxit, maxlmda)
+         inia(:,i)=alpha(:)
+         inib(:,i)=beta(:)
+         etamat(:,i)=eta(:)
+10002 continue
+c     SCAD solution path along kappa
+      if (nka .eq. 1) then
+         olmdas(:)=lmdas(:)
+         okas(1:nlmda)=kas(1)
+         ocoef(1:q,:)=inia(:,:)
+         ocoef((q+1):(q+p),:)=inib(:,:)
+      else
+         do 1003 i=1,nlmda
+            olmdas(((i-1)*nka+1):(i*nka))=lmdas(i)
+            okas(((i-1)*nka+1):(i*nka))=kas(:)
+ 1003    continue
+!     ... i=1 case
+         i=1
+         alpha(:)=inia(:,i)
+         beta(:) =inib(:,i)
+         eta(:)  =etamat(:,i)
+         do 1005 j=1,nka
+            ocoef(1:q        ,(i-1)*nka+j)=alpha(:)
+            ocoef((q+1):(q+p),(i-1)*nka+j)=beta(:)
+ 1005    continue
+         do 1004 i=2,nlmda
+            alpha(:)=inia(:,i)
+            beta(:) =inib(:,i)
+            eta(:)  =etamat(:,i)
+c     ...... j=1 case
+            j=1
+            ocoef(1:q        ,(i-1)*nka+j)=alpha(:)
+            ocoef((q+1):(q+p),(i-1)*nka+j)=beta(:)
+            do 1006 j=2,nka
+               call bfscad(alpha,beta,eta,lmdas(i),kas(j),y,x,sz,
+     +              n,q,p,epsilon,maxit, maxlmda)
+               ocoef(1:q        ,(i-1)*nka+j)=alpha(:)
+               ocoef((q+1):(q+p),(i-1)*nka+j)=beta(:)
+ 1006       continue
+ 1004    continue
+      endif
+c     compute model size,eigenvalue,aic,bic, objective function
+      do 10 i=1,(nka*nlmda)
+         call fmeabo(odf(i),oevidx(i),oaic(i),obic(i),oobj(i),
+     +        ocoef(:,i),y,x,sz,n,q,p,okas(i),olmdas(i))
+ 10   continue
+!     change the penalized ocoefficients back
+      do 10005 i=1,p
+         ocoef(q+i,:)=as(i)*ocoef(q+i,:)
+10005 continue
+      end
 
 
 c     hybrid path, update the non-zero lasso only
@@ -1028,6 +1306,102 @@ c     ...... j=1 case
             do 1006 j=2,nka
                call mcp(alpha,beta,eta,lmdas(i),kas(j),y,x,sz,
      +              n,q,p,epsilon,maxit)
+               ocoef(1:q        ,(i-1)*nka+j)=alpha(:)
+               ocoef((q+1):(q+p),(i-1)*nka+j)=beta(:)
+ 1006       continue
+ 1004    continue
+      endif
+c     compute model size,eigenvalue,aic,bic, objective function
+      do 10 i=1,(nka*nlmda)
+         call fmeabo(odf(i),oevidx(i),oaic(i),obic(i),oobj(i),
+     +        ocoef(:,i),y,x,sz,n,q,p,okas(i),olmdas(i))
+ 10   continue
+!     change the penalized ocoefficients back
+      do 10005 i=1,p
+         ocoef(q+i,:)=as(i)*ocoef(q+i,:)
+10005 continue
+      end
+
+
+c     solution path along kappa
+c***********************************************************************
+      subroutine bfmcpkapa(olmdas,okas,ocoef,oaic,obic,oobj,odf,oevidx,
+     +     y,x,z,n,q,p,nka,maxka,nlmda,minlmda, umaxlmda,
+     +     epsilon,maxit)
+      integer n,q,p,nka,nlmda,maxit,odf(nka*nlmda),oevidx(nka*nlmda)
+      double precision olmdas(nka*nlmda),okas(nka*nlmda),
+     +     ocoef(q+p,nka*nlmda),oaic(nka*nlmda),obic(nka*nlmda),
+     +     oobj(nka*nlmda),y(n),x(n,q),z(n,p),
+     +     maxka,minlmda,epsilon, umaxlmda
+      integer i,j
+      double precision as(p),sz(n,p),kas(nka),unitka,unitlmda, maxlmda,
+     +     lmdas(nlmda),alpha(q),beta(p),eta(n),
+     +     inia(q,nlmda),inib(p,nlmda),etamat(n,nlmda)
+c     standardization of Z
+      call standard(as,sz,z,n,p)
+c     calculate kappas
+      if (nka .eq. 1) then
+         kas(1)=0.d0
+      else
+         unitka=maxka/dble(nka-1)
+         do 10000 i=1,nka
+            kas(i)=dble(i-1)*unitka
+10000    continue
+      endif
+c     calculate lambdas
+      unitlmda=log(minlmda)/dble(nlmda-1)
+      call maxbi(maxlmda,alpha,beta,eta,y,x,sz,n,q,p,
+     +     epsilon,maxit)
+      if (umaxlmda .gt. 0.d0) then
+         lmdas(1)=umaxlmda
+      else
+         lmdas(1)=maxlmda
+      end if
+      do 10001 i=2,nlmda
+         lmdas(i)=lmdas(1)*exp(unitlmda*dble(i-1))
+10001 continue
+c     Lasso solution path as initials
+      inia(:,1)=alpha(:)
+      inib(:,1)=beta(:)
+      etamat(:,1)=eta(:)
+      do 10002 i=2,nlmda
+         call bflasso(alpha,beta,eta,lmdas(i),y,x,sz,n,q,p,
+     +        epsilon,maxit, maxlmda)
+         inia(:,i)=alpha(:)
+         inib(:,i)=beta(:)
+         etamat(:,i)=eta(:)
+10002 continue
+c     MCP solution path along kappa
+      if (nka .eq. 1) then
+         olmdas(:)=lmdas(:)
+         okas(1:nlmda)=kas(1)
+         ocoef(1:q,:)=inia(:,:)
+         ocoef((q+1):(q+p),:)=inib(:,:)
+      else
+         do 1003 i=1,nlmda
+            olmdas(((i-1)*nka+1):(i*nka))=lmdas(i)
+            okas(((i-1)*nka+1):(i*nka))=kas(:)
+ 1003    continue
+!     ... i=1 case
+         i=1
+         alpha(:)=inia(:,i)
+         beta(:) =inib(:,i)
+         eta(:)  =etamat(:,i)
+         do 1005 j=1,nka
+            ocoef(1:q        ,(i-1)*nka+j)=alpha(:)
+            ocoef((q+1):(q+p),(i-1)*nka+j)=beta(:)
+ 1005    continue
+         do 1004 i=2,nlmda
+            alpha(:)=inia(:,i)
+            beta(:) =inib(:,i)
+            eta(:)  =etamat(:,i)
+c     ...... j=1 case
+            j=1
+            ocoef(1:q        ,(i-1)*nka+j)=alpha(:)
+            ocoef((q+1):(q+p),(i-1)*nka+j)=beta(:)
+            do 1006 j=2,nka
+               call bfmcp(alpha,beta,eta,lmdas(i),kas(j),y,x,sz,
+     +              n,q,p,epsilon,maxit, maxlmda)
                ocoef(1:q        ,(i-1)*nka+j)=alpha(:)
                ocoef((q+1):(q+p),(i-1)*nka+j)=beta(:)
  1006       continue
